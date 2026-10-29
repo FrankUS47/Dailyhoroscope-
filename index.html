@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專屬深度全星盤與運勢解析系統</title>
+    <style>
+        :root {
+            --bg-dark: #0b0f19;
+            --card-bg: #151d2a;
+            --card-inner: #1e293b;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-gold: #fbbf24;
+            --accent-cyan: #06b6d4;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            text-align: center;
+            background: linear-gradient(135deg, #c084fc, #f472b6, #fbbf24);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+            font-size: 2.2rem;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group { margin-bottom: 10px; }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .select-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        select, input[type="time"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        select { cursor: pointer; }
+
+        select:focus, input:focus { border-color: var(--accent-purple); }
+
+        .hint { font-size: 0.78rem; color: var(--text-sub); margin-top: 4px; }
+
+        .manual-panel {
+            display: none;
+            background-color: var(--bg-dark);
+            border: 1px dashed #475569;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .manual-panel .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .check-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+        }
+
+        .check-row input { width: auto; }
+
+        button.btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
+
+        button.btn-submit:hover { opacity: 0.95; transform: translateY(-2px); }
+
+        .error-msg {
+            display: none;
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background-color: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            font-size: 0.9rem;
+        }
+
+        .result-container { display: none; margin-top: 30px; }
+
+        .header-card {
+            background: linear-gradient(135deg, #1e1b4b, #311042);
+            padding: 22px;
+            border-radius: 14px;
+            border: 1px solid #6366f1;
+            margin-bottom: 20px;
+        }
+
+        .astro-header-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .main-sign-box .title { font-size: 0.85rem; color: var(--text-sub); }
+        .main-sign-box .name { font-size: 1.4rem; font-weight: bold; color: #e0e7ff; }
+        .main-sign-box .deg { font-size: 0.8rem; color: #a5b4fc; margin-top: 2px; }
+
+        .lucky-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+        }
+
+        .lucky-item {
+            background-color: rgba(0, 0, 0, 0.25);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .lucky-item .title { font-size: 0.8rem; color: var(--text-sub); }
+        .lucky-item .value { font-size: 1rem; font-weight: bold; color: var(--accent-gold); margin-top: 4px; }
+
+        .tab-menu {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 10px 18px;
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active { color: var(--accent-pink); border-bottom-color: var(--accent-pink); }
+
+        .tab-content {
+            display: none;
+            background-color: var(--card-inner);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-content.active { display: block; }
+
+        .planet-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .planet-card {
+            background-color: var(--bg-dark);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-purple);
+        }
+
+        .planet-card h4 {
+            margin: 0 0 8px 0;
+            color: #c084fc;
+            font-size: 1.05rem;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .planet-card p { font-size: 0.9rem; line-height: 1.6; color: #cbd5e1; margin: 0; }
+
+        .planet-relation {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            background-color: rgba(6, 182, 212, 0.1);
+            padding: 6px 10px;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+
+        .traits-box {
+            background-color: var(--bg-dark);
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #334155;
+        }
+
+        .traits-box h4 { color: var(--accent-gold); margin-top: 0; margin-bottom: 10px; }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .score-row { background-color: var(--bg-dark); padding: 10px 14px; border-radius: 8px; }
+        .score-header { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px; }
+        .score-bar-bg { height: 8px; background-color: #334155; border-radius: 4px; overflow: hidden; }
+        .score-bar-fill { height: 100%; background: linear-gradient(90deg, #a855f7, #ec4899); border-radius: 4px; }
+
+        .analysis-box { line-height: 1.7; font-size: 0.95rem; color: #e2e8f0; }
+        .analysis-box p { margin: 0 0 12px 0; }
+
+        .event-title { color: var(--accent-gold); font-weight: bold; margin: 14px 0 6px 0; }
+
+        .event-list { margin: 0 0 12px 0; padding-left: 20px; }
+        .event-list li { margin-bottom: 6px; font-size: 0.9rem; color: #cbd5e1; }
+        .tone-good { color: #4ade80; font-weight: bold; }
+        .tone-bad { color: #f87171; font-weight: bold; }
+
+        .month-tags-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+            background-color: var(--bg-dark);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-gold);
+        }
+
+        .strength-box {
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            color: #4ade80;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .weakness-box {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            color: #f87171;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .footnote {
+            margin-top: 22px;
+            font-size: 0.78rem;
+            color: var(--text-sub);
+            line-height: 1.6;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+
+        @media (max-width: 560px) {
+            .scores-grid { grid-template-columns: 1fr; }
+            .container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>✨ 專屬星盤深度解析與多維運勢</h1>
+    <p class="subtitle">輸入出生年月日、時間與地點，依天文曆算出本命十大行星與上升星座，並結合當前行星位置產生運勢</p>
+
+    <!-- 輸入表單 -->
+    <div class="form-group">
+        <label>出生日期（公曆/國曆）</label>
+        <div class="select-group">
+            <select id="yearSelect"></select>
+            <select id="monthSelect"></select>
+            <select id="daySelect"></select>
+        </div>
+    </div>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="hourSelect">出生時辰</label>
+            <select id="hourSelect">
+                <option value="0">子時 (23:00 - 00:59)</option>
+                <option value="2">丑時 (01:00 - 02:59)</option>
+                <option value="4">寅時 (03:00 - 04:59)</option>
+                <option value="6">卯時 (05:00 - 06:59)</option>
+                <option value="8">辰時 (07:00 - 08:59)</option>
+                <option value="10">巳時 (09:00 - 10:59)</option>
+                <option value="12">午時 (11:00 - 12:59)</option>
+                <option value="14">未時 (13:00 - 14:59)</option>
+                <option value="16">申時 (15:00 - 16:59)</option>
+                <option value="18">酉時 (17:00 - 18:59)</option>
+                <option value="20">戌時 (19:00 - 20:59)</option>
+                <option value="22">亥時 (21:00 - 22:59)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="exactTime">精確出生時間（選填）</label>
+            <input type="time" id="exactTime">
+            <div class="hint">有填寫時以此為準；上升星座約每 4 分鐘移動 1°，越精確越準。</div>
+        </div>
+
+        <div class="form-group">
+            <label for="countrySelect">出生國家</label>
+            <select id="countrySelect"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="citySelect">出生縣市/地區</label>
+            <select id="citySelect"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="targetYearSelect">查詢西元年流年</label>
+            <select id="targetYearSelect"></select>
+        </div>
+    </div>
+
+    <!-- 其他地區：手動輸入經緯度 -->
+    <div class="manual-panel" id="manualPanel">
+        <div class="row">
+            <div>
+                <label for="manLat">緯度（北緯為正）</label>
+                <input type="number" id="manLat" step="0.01" min="-66" max="66" placeholder="例如 25.03">
+            </div>
+            <div>
+                <label for="manLon">經度（東經為正）</label>
+                <input type="number" id="manLon" step="0.01" min="-180" max="180" placeholder="例如 121.56">
+            </div>
+            <div>
+                <label for="manTz">時區（UTC 偏移小時）</label>
+                <input type="number" id="manTz" step="0.5" min="-12" max="14" placeholder="例如 8">
+            </div>
+        </div>
+    </div>
+
+    <div class="check-row">
+        <input type="checkbox" id="dstCheck">
+        <label for="dstCheck" style="margin:0; font-weight:normal; color:var(--text-sub);">出生當時實施夏令時間（美國會自動判斷，其他地區請自行勾選）</label>
+    </div>
+
+    <button class="btn-submit" onclick="generateAllAnalysis()">開始生成專屬深度星盤與運勢</button>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- 結果展現區域 -->
+    <div id="resultContainer" class="result-container">
+
+        <div class="header-card">
+            <div class="astro-header-info">
+                <div class="main-sign-box">
+                    <div class="title">☀️ 太陽星座（核心自我）</div>
+                    <div class="name" id="dispSunSign">-</div>
+                    <div class="deg" id="dispSunDeg"></div>
+                </div>
+                <div class="main-sign-box">
+                    <div class="title">🌙 月亮星座（內在情感）</div>
+                    <div class="name" id="dispMoonSign">-</div>
+                    <div class="deg" id="dispMoonDeg"></div>
+                </div>
+                <div class="main-sign-box">
+                    <div class="title">🌅 上升星座（命門與面具）</div>
+                    <div class="name" id="dispAscSign">-</div>
+                    <div class="deg" id="dispAscDeg"></div>
+                </div>
+            </div>
+
+            <div style="font-size:0.85rem; color:#a5b4fc; margin-bottom:12px;" id="dispBirthPlace"></div>
+
+            <div class="lucky-grid">
+                <div class="lucky-item"><div class="title">幸運數字</div><div class="value" id="luckNum">-</div></div>
+                <div class="lucky-item"><div class="title">幸運顏色</div><div class="value" id="luckColor">-</div></div>
+                <div class="lucky-item"><div class="title">開運方位</div><div class="value" id="luckDir">-</div></div>
+                <div class="lucky-item"><div class="title">今日吉時</div><div class="value" id="luckHour">-</div></div>
+                <div class="lucky-item"><div class="title">幸運星座</div><div class="value" id="luckSign">-</div></div>
+            </div>
+        </div>
+
+        <div class="tab-menu">
+            <button class="tab-btn active" onclick="switchTab('planets', this)">十大行星與上升解析</button>
+            <button class="tab-btn" onclick="switchTab('ascendant', this)">上升星座模式與元素</button>
+            <button class="tab-btn" onclick="switchTab('today', this)">今日運勢</button>
+            <button class="tab-btn" onclick="switchTab('tomorrow', this)">明日運勢</button>
+            <button class="tab-btn" onclick="switchTab('week', this)">本周運勢</button>
+            <button class="tab-btn" onclick="switchTab('month', this)">本月運勢</button>
+            <button class="tab-btn" onclick="switchTab('year', this)"><span id="tabYearLabel">2026</span>流年運勢</button>
+        </div>
+
+        <div id="tab-planets" class="tab-content active">
+            <h3 style="color:#c084fc; margin-top:0;">🪐 十大行星與上升星座能量地圖</h3>
+            <p style="font-size:0.9rem; color:var(--text-sub);">星盤中的行星代表不同的心理機能，宮位採整宮制（以上升星座所在星座為第 1 宮）。℞ 表示出生時該行星逆行。</p>
+            <div class="planet-card-grid" id="planetCards"></div>
+        </div>
+
+        <div id="tab-ascendant" class="tab-content">
+            <h3 style="color:#fbbf24; margin-top:0;">🌅 上升星座三模式與四元素深度解析</h3>
+            <div class="traits-box">
+                <h4 id="ascModeTitle">⚖️ 上升星座的三種模式</h4>
+                <p class="analysis-box" id="ascModeDesc"></p>
+            </div>
+            <div class="traits-box">
+                <h4 id="ascElemTitle">🔥 上升星座的四元素特質</h4>
+                <p class="analysis-box" id="ascElemDesc"></p>
+            </div>
+            <div class="traits-box">
+                <h4 id="ascPolTitle">☯️ 上升星座的陰陽性</h4>
+                <p class="analysis-box" id="ascPolDesc"></p>
+            </div>
+        </div>
+
+        <div id="tab-today" class="tab-content">
+            <div class="scores-grid" id="todayScores"></div>
+            <div class="analysis-box" id="todayText"></div>
+        </div>
+
+        <div id="tab-tomorrow" class="tab-content">
+            <div class="scores-grid" id="tomorrowScores"></div>
+            <div class="analysis-box" id="tomorrowText"></div>
+        </div>
+
+        <div id="tab-week" class="tab-content">
+            <div class="scores-grid" id="weekScores"></div>
+            <div class="analysis-box" id="weekText"></div>
+        </div>
+
+        <div id="tab-month" class="tab-content">
+            <div class="month-tags-grid">
+                <div><span style="color:var(--text-sub);">貴人方位：</span><span style="font-weight:bold;" id="mDir">-</span></div>
+                <div><span style="color:var(--text-sub);">休閒解壓：</span><span style="font-weight:bold;" id="mLeisure">-</span></div>
+                <div><span style="color:var(--text-sub);">貼心星座：</span><span style="font-weight:bold;" id="mFriend">-</span></div>
+                <div><span style="color:var(--text-sub);">財神星座：</span><span style="font-weight:bold;" id="mWealth">-</span></div>
+                <div><span style="color:var(--text-sub);">煩人星座：</span><span style="font-weight:bold;" id="mAnnoy">-</span></div>
+            </div>
+            <div class="strength-box" id="mStrength"></div>
+            <div class="weakness-box" id="mWeak"></div>
+            <div class="scores-grid" id="monthScores"></div>
+            <div class="analysis-box" id="monthText"></div>
+        </div>
+
+        <div id="tab-year" class="tab-content">
+            <h3 style="color:#fbbf24; margin-top:0;" id="yearTitle">流年運勢</h3>
+            <div class="scores-grid" id="yearScores"></div>
+            <div class="analysis-box" id="yearText"></div>
+        </div>
+
+        <div class="footnote">
+            行星位置依天文曆計算（太陽、月亮、水星至冥王星；上升點依出生時間與出生地經緯度計算）。出生時間以所選地區的標準時區換算，若出生當時實施夏令時間，請勾選上方選項。幸運數字、顏色、方位與吉時屬傳統／娛樂性質的參考內容。
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================================================
+     模組 1：資料表（星座、行星說明、地點）
+     ============================================================ -->
+<script data-module="data">
+    // 標準順序：從白羊座（黃經 0°）開始
+    const SIGNS = [
+        { name: '白羊座', sym: '♈', elem: '火象', qual: '基本', pol: '陽性', colors: '鮮紅色、金黃', nums: '1, 9',
+          style: '直接、主動、勇於開創',
+          tips: { love: '主動表達心意，直球比暗示有效，但別操之過急', career: '適合開新案、搶先機，記得先排好優先順序再衝刺', wealth: '投資宜果斷但設好停損，避免衝動消費' } },
+        { name: '金牛座', sym: '♉', elem: '土象', qual: '固定', pol: '陰性', colors: '翡翠綠、玫瑰粉', nums: '5, 8',
+          style: '穩健、重感官與安全感',
+          tips: { love: '重視安全感，穩定相處勝過刺激，別因固執而錯過溝通', career: '穩紮穩打、重視品質，按部就班就能累積成果', wealth: '適合長期儲蓄與實物資產，避免為了舒適過度花費' } },
+        { name: '雙子座', sym: '♊', elem: '風象', qual: '變動', pol: '陽性', colors: '檸檬黃、淺藍', nums: '3, 5',
+          style: '好奇、靈活、善於交流',
+          tips: { love: '多聊天、多交流能讓關係升溫，注意別三心二意', career: '資訊整合與溝通是強項，多工時留意細節遺漏', wealth: '靠人脈與資訊找到機會，宜分散配置而非盲目跟風' } },
+        { name: '巨蟹座', sym: '♋', elem: '水象', qual: '基本', pol: '陰性', colors: '珍珠白、銀色', nums: '2, 4',
+          style: '細膩、護衛、重情感連結',
+          tips: { love: '細膩的關心最能打動人，也要學會說出自己的需求', career: '團隊與照顧型工作表現佳，避免把情緒帶進決策', wealth: '以守成為主，家庭與固定開支的規劃會帶來安心' } },
+        { name: '獅子座', sym: '♌', elem: '火象', qual: '固定', pol: '陽性', colors: '華麗金、橘紅', nums: '1, 7',
+          style: '自信、熱情、渴望被看見',
+          tips: { love: '展現魅力與誠意，別讓自尊心阻礙你示弱', career: '適合站到台前、帶領他人，也要聽取團隊意見', wealth: '大方花費前先想清預算，投資自己最划算' } },
+        { name: '處女座', sym: '♍', elem: '土象', qual: '變動', pol: '陰性', colors: '純白色、橄欖綠', nums: '5, 7',
+          style: '細心、務實、追求精確',
+          tips: { love: '用行動照顧對方，但別過度挑剔細節', career: '細緻與條理是優勢，留意別陷入完美主義而拖延', wealth: '精打細算有成，記帳與檢視固定支出效果特別好' } },
+        { name: '天秤座', sym: '♎', elem: '風象', qual: '基本', pol: '陽性', colors: '粉藍色、淡雅金', nums: '6, 8',
+          style: '重和諧、審美、講求平衡',
+          tips: { love: '重視互動與平衡，遇事勇敢表態，別一味迎合', career: '合作、協調、談判有利，避免猶豫拖延決定', wealth: '與人合夥或共同理財要把規則講清楚，避免為了面子而花費' } },
+        { name: '天蠍座', sym: '♏', elem: '水象', qual: '固定', pol: '陰性', colors: '酒紅色、深黑', nums: '0, 9',
+          style: '深刻、專注、不輕易放手',
+          tips: { love: '感情深刻而專一，信任需要溝通而非試探', career: '專注力強，適合研究、策略與危機處理', wealth: '擅長發現隱藏的機會，但要避開控制欲帶來的金錢糾紛' } },
+        { name: '射手座', sym: '♐', elem: '火象', qual: '變動', pol: '陽性', colors: '紫色、寶藍色', nums: '3, 9',
+          style: '樂觀、自由、追求意義',
+          tips: { love: '自由與真誠並重，給彼此空間但別忽略承諾', career: '適合拓展視野、跨域學習或出差，注意細節落實', wealth: '樂觀帶來機會，但避免過度擴張或賭運氣' } },
+        { name: '摩羯座', sym: '♑', elem: '土象', qual: '基本', pol: '陰性', colors: '深灰色、墨綠', nums: '4, 8',
+          style: '自律、務實、重責任與成就',
+          tips: { love: '以行動與責任證明心意，偶爾放下防備會更貼近', career: '目標明確、耐力十足，長期規劃容易看見成果', wealth: '穩健累積，長期資產與退休規劃最適合' } },
+        { name: '水瓶座', sym: '♒', elem: '風象', qual: '固定', pol: '陽性', colors: '天藍色、銀白', nums: '3, 7',
+          style: '獨立、理性、重視創新與自由',
+          tips: { love: '需要空間也需要知心，用真誠交流取代疏離', career: '創新與獨立思考受肯定，注意與團隊同步', wealth: '對新科技與新型態收入有嗅覺，投資前先驗證風險' } },
+        { name: '雙魚座', sym: '♓', elem: '水象', qual: '變動', pol: '陰性', colors: '海藍色、香草紫', nums: '2, 6',
+          style: '感性、富想像、同理心強',
+          tips: { love: '直覺與浪漫豐富，留意別理想化對方而忽略現實', career: '創意與同理心是亮點，需要明確界線避免被牽著走', wealth: '避免情緒性或人情支出，設定自動儲蓄較安心' } }
+    ];
+
+    const PLANET_INFO = [
+        { key: 'Sun', label: '☀️ 太陽 (Sun)', desc: '主宰核心意志、生命力與自我認同，是展現熱情與自信的來源。' },
+        { key: 'Moon', label: '🌙 月亮 (Moon)', desc: '主宰情緒感受、安全感需求與潛意識習慣，反映記憶與私人情感界線。' },
+        { key: 'Mercury', label: '☿ 水星 (Mercury)', desc: '主宰思考方式、溝通表達、學習與資訊處理，是理性心智運作的橋樑。' },
+        { key: 'Venus', label: '♀ 金星 (Venus)', desc: '主宰愛情觀、審美品味、人際吸引力與價值觀，代表吸引與接受愛的方式。' },
+        { key: 'Mars', label: '♂ 火星 (Mars)', desc: '主宰行動力、競爭心、欲望與衝勁，代表爭取目標與面對衝突的方式。' },
+        { key: 'Jupiter', label: '♃ 木星 (Jupiter)', desc: '主宰信念、成長擴張、機運與貴人，約一年換一個星座，帶來放大與助力。' },
+        { key: 'Saturn', label: '♄ 土星 (Saturn)', desc: '主宰責任、限制、結構與時間考驗，約 2.5 年換一個星座，代表需要成熟與耐心之處。' },
+        { key: 'Uranus', label: '♅ 天王星 (Uranus)', desc: '世代行星，約 7 年換一個星座，代表突破常規、獨立與突發的變革。' },
+        { key: 'Neptune', label: '♆ 海王星 (Neptune)', desc: '世代行星，約 14 年換一個星座，代表夢想、靈感、同理與迷霧般的直覺。' },
+        { key: 'Pluto', label: '♇ 冥王星 (Pluto)', desc: '世代行星，在一個星座停留約 12～30 年，代表深層轉化、權力議題與重生。' }
+    ];
+
+    const HOUSE_MEANING = [
+        '自我與外在形象', '財務與價值觀', '溝通與學習', '家庭與根基', '戀愛與創作', '工作與健康日常',
+        '伴侶與合作', '共同資源與深度轉變', '遠行與信念', '事業與社會地位', '朋友與理想', '潛意識與隱退'
+    ];
+
+    const SHICHEN = [
+        '子時 23:00-00:59', '丑時 01:00-02:59', '寅時 03:00-04:59', '卯時 05:00-06:59',
+        '辰時 07:00-08:59', '巳時 09:00-10:59', '午時 11:00-12:59', '未時 13:00-14:59',
+        '申時 15:00-16:59', '酉時 17:00-18:59', '戌時 19:00-20:59', '亥時 21:00-22:59'
+    ];
+
+    // 地點：[名稱, 緯度, 經度]；緯經度為 null 代表需手動輸入
+    const COUNTRIES = {
+        '臺灣': { tz: 8, list: [
+            ['臺北市', 25.03, 121.56], ['新北市', 25.01, 121.46], ['桃園市', 24.99, 121.30], ['臺中市', 24.15, 120.67],
+            ['臺南市', 22.99, 120.21], ['高雄市', 22.63, 120.30], ['基隆市', 25.13, 121.74], ['新竹市', 24.81, 120.97],
+            ['嘉義市', 23.48, 120.45], ['新竹縣', 24.84, 121.01], ['苗栗縣', 24.56, 120.82], ['彰化縣', 24.08, 120.54],
+            ['南投縣', 23.91, 120.69], ['雲林縣', 23.71, 120.43], ['嘉義縣', 23.46, 120.32], ['屏東縣', 22.67, 120.49],
+            ['宜蘭縣', 24.75, 121.75], ['花蓮縣', 23.98, 121.60], ['臺東縣', 22.76, 121.14], ['澎湖縣', 23.57, 119.57],
+            ['金門縣', 24.45, 118.38], ['連江縣', 26.16, 119.95] ] },
+        '中國大陸': { tz: 8, list: [
+            ['北京市', 39.90, 116.41], ['上海市', 31.23, 121.47], ['廣東省(廣州/深圳)', 23.13, 113.26], ['浙江省(杭州)', 30.27, 120.15],
+            ['江蘇省(南京)', 32.06, 118.80], ['四川省(成都)', 30.57, 104.07], ['福建省(福州/廈門)', 26.07, 119.30],
+            ['湖北省(武漢)', 30.59, 114.31], ['其他省市（自行輸入經緯度）', null, null] ] },
+        '香港/澳門': { tz: 8, list: [
+            ['香港島', 22.28, 114.16], ['九龍', 22.32, 114.17], ['新界', 22.39, 114.15], ['澳門半島', 22.20, 113.54], ['氹仔/路環', 22.16, 113.56] ] },
+        '日本': { tz: 9, list: [
+            ['東京都', 35.68, 139.69], ['大阪府', 34.69, 135.50], ['京都府', 35.01, 135.77], ['北海道(札幌)', 43.06, 141.35],
+            ['福岡縣', 33.59, 130.40], ['愛知縣(名古屋)', 35.18, 136.91], ['其他道府縣（自行輸入經緯度）', null, null] ] },
+        '美國': { tz: null, list: [
+            ['加利福尼亞州(洛杉磯)', 34.05, -118.24, -8], ['紐約州(紐約市)', 40.71, -74.01, -5], ['德克薩斯州(休士頓)', 29.76, -95.37, -6],
+            ['華盛頓州(西雅圖)', 47.61, -122.33, -8], ['伊利諾州(芝加哥)', 41.88, -87.63, -6], ['其他州別（自行輸入經緯度）', null, null] ] },
+        '新加坡': { tz: 8, list: [
+            ['新加坡中央區', 1.29, 103.85], ['東部區域', 1.35, 103.95], ['西部區域', 1.34, 103.70], ['北部區域', 1.43, 103.79] ] },
+        '其他國家': { tz: 0, list: [['自行輸入經緯度', null, null]] }
+    };
+</script>
+
+
+<!-- ============================================================
+     模組 2：天文計算引擎（太陽、月亮、行星、上升點）
+     ============================================================ -->
+<script data-module="astro">
+    const AstroCalc = (() => {
+        const RAD = Math.PI / 180;
+        const norm = x => ((x % 360) + 360) % 360;
+        const sin = d => Math.sin(d * RAD);
+        const cos = d => Math.cos(d * RAD);
+
+        const julianDay = ms => ms / 86400000 + 2440587.5;
+        const centuries = ms => (julianDay(ms) - 2451545.0) / 36525;
+
+        // 黃經章動
+        function nutationLon(T) {
+            const om = 125.04452 - 1934.136261 * T;
+            const L = 280.4665 + 36000.7698 * T;
+            const Lm = 218.3165 + 481267.8813 * T;
+            return (-17.20 * sin(om) - 1.32 * sin(2 * L) - 0.23 * sin(2 * Lm) + 0.21 * sin(2 * om)) / 3600;
+        }
+
+        // 太陽視黃經（Meeus 低精度公式，誤差約 0.01°）
+        function sunLon(T) {
+            const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+            const M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
+            const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * sin(M)
+                    + (0.019993 - 0.000101 * T) * sin(2 * M) + 0.000289 * sin(3 * M);
+            const om = 125.04 - 1934.136 * T;
+            return norm(L0 + C - 0.00569 - 0.00478 * sin(om));
+        }
+
+        // 月亮黃經（Meeus 第 47 章主要項，誤差約 0.02°）
+        // 欄位：[D, M, M', F, 係數(1e-6 度)]
+        const MOON_TERMS = [
+            [0,0,1,0,6288774],[2,0,-1,0,1274027],[2,0,0,0,658314],[0,0,2,0,213618],[0,1,0,0,-185116],
+            [0,0,0,2,-114332],[2,0,-2,0,58793],[2,-1,-1,0,57066],[2,0,1,0,53322],[2,-1,0,0,45758],
+            [0,1,-1,0,-40923],[1,0,0,0,-34720],[0,1,1,0,-30383],[2,0,0,-2,15327],[0,0,1,2,-12528],
+            [0,0,1,-2,10980],[4,0,-1,0,10675],[0,0,3,0,10034],[4,0,-2,0,8548],[2,1,-1,0,-7888],
+            [2,1,0,0,-6766],[1,0,-1,0,-5163],[1,1,0,0,4987],[2,-1,1,0,4036],[2,0,2,0,3994],
+            [4,0,0,0,3861],[2,0,-3,0,3665],[0,1,-2,0,-2689],[2,0,-1,2,-2602],[2,-1,-2,0,2390],
+            [1,0,1,0,-2348],[2,-2,0,0,2236],[0,1,2,0,-2120],[0,2,0,0,-2069],[2,-2,-1,0,2048],
+            [2,0,1,-2,-1773],[2,0,0,2,-1595],[4,-1,-1,0,1215],[0,0,2,2,-1110],[3,0,-1,0,-892],
+            [2,1,1,0,-810],[4,-1,-2,0,759],[0,2,-1,0,-713],[2,2,-1,0,-700],[2,1,-2,0,691],
+            [2,-1,0,-2,596],[4,0,1,0,549],[0,0,4,0,537],[4,-1,0,0,520],[1,0,-2,0,-487],
+            [2,1,0,-2,-399],[0,0,2,-2,-381],[1,1,1,0,351],[3,0,-2,0,-340],[4,0,-3,0,330],
+            [2,-1,2,0,327],[0,2,1,0,-323],[1,1,-1,0,299],[2,0,3,0,294]
+        ];
+
+        function moonLon(T) {
+            const Lp = 218.3164477 + 481267.88123421 * T - 0.0015786 * T * T;
+            const D = 297.8501921 + 445267.1114034 * T - 0.0018819 * T * T;
+            const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T * T;
+            const Mp = 134.9633964 + 477198.8675055 * T + 0.0087414 * T * T;
+            const F = 93.2720950 + 483202.0175233 * T - 0.0036539 * T * T;
+            const E = 1 - 0.002516 * T - 0.0000074 * T * T;
+            let sum = 0;
+            for (const [d, m, mp, f, c] of MOON_TERMS) {
+                const arg = d * D + m * M + mp * Mp + f * F;
+                const am = Math.abs(m);
+                const ef = am === 1 ? E : (am === 2 ? E * E : 1);
+                sum += c * ef * sin(arg);
+            }
+            const A1 = 119.75 + 131.849 * T;
+            const A2 = 53.09 + 479264.290 * T;
+            sum += 3958 * sin(A1) + 1962 * sin(Lp - F) + 318 * sin(A2);
+            return norm(Lp + sum / 1e6 + nutationLon(T));
+        }
+
+        // JPL 近似軌道要素（1800–2050）：[a, da, e, de, I, dI, L, dL, 近日點經度, d, 升交點經度, d]
+        const ELEMENTS = {
+            Mercury: [0.38709927, 0.00000037, 0.20563593, 0.00001906, 7.00497902, -0.00594749, 252.25032350, 149472.67411175, 77.45779628, 0.16047689, 48.33076593, -0.12534081],
+            Venus:   [0.72333566, 0.00000390, 0.00677672, -0.00004107, 3.39467605, -0.00078890, 181.97909950, 58517.81538729, 131.60246718, 0.00268329, 76.67984255, -0.27769418],
+            Earth:   [1.00000261, 0.00000562, 0.01671123, -0.00004392, -0.00001531, -0.01294668, 100.46457166, 35999.37244981, 102.93768193, 0.32327364, 0.0, 0.0],
+            Mars:    [1.52371034, 0.00001847, 0.09339410, 0.00007882, 1.84969142, -0.00813131, -4.55343205, 19140.30268499, -23.94362959, 0.44441088, 49.55953891, -0.29257343],
+            Jupiter: [5.20288700, -0.00011607, 0.04838624, -0.00013253, 1.30439695, -0.00183714, 34.39644051, 3034.74612775, 14.72847983, 0.21252668, 100.47390909, 0.20469106],
+            Saturn:  [9.53667594, -0.00125060, 0.05386179, -0.00050991, 2.48599187, 0.00193609, 49.95424423, 1222.49362201, 92.59887831, -0.41897216, 113.66242448, -0.28867794],
+            Uranus:  [19.18916464, -0.00196176, 0.04725744, -0.00004397, 0.77263783, -0.00242939, 313.23810451, 428.48202785, 170.95427630, 0.40805281, 74.01692503, 0.04240589],
+            Neptune: [30.06992276, 0.00026291, 0.00859048, 0.00005105, 1.77004347, 0.00035372, -55.12002969, 218.45945325, 44.96476227, -0.32241464, 131.78422574, -0.00508664],
+            Pluto:   [39.48211675, -0.00031596, 0.24882730, 0.00005170, 17.14001206, 0.00004818, 238.92903833, 145.20780515, 224.06891629, -0.04062942, 110.30393684, -0.01183482]
+        };
+
+        // 日心直角座標（J2000 黃道）
+        function helio(name, T) {
+            const el = ELEMENTS[name];
+            const a = el[0] + el[1] * T;
+            const e = el[2] + el[3] * T;
+            const I = el[4] + el[5] * T;
+            const L = el[6] + el[7] * T;
+            const varpi = el[8] + el[9] * T;
+            const Om = el[10] + el[11] * T;
+            const w = varpi - Om;
+            let M = norm(L - varpi);
+            if (M > 180) M -= 360;
+            const eDeg = e / RAD;
+            let E = M + eDeg * sin(M);
+            for (let i = 0; i < 12; i++) {
+                const dE = (M - E + eDeg * sin(E)) / (1 - e * cos(E));
+                E += dE;
+                if (Math.abs(dE) < 1e-9) break;
+            }
+            const xp = a * (cos(E) - e);
+            const yp = a * Math.sqrt(1 - e * e) * sin(E);
+            const cw = cos(w), sw = sin(w), cO = cos(Om), sO = sin(Om), cI = cos(I), sI = sin(I);
+            return {
+                x: (cw * cO - sw * sO * cI) * xp + (-sw * cO - cw * sO * cI) * yp,
+                y: (cw * sO + sw * cO * cI) * xp + (-sw * sO + cw * cO * cI) * yp,
+                z: (sw * sI) * xp + (cw * sI) * yp
+            };
+        }
+
+        // 行星地心視黃經（當日分點黃道）
+        function planetLon(name, T) {
+            const p = helio(name, T);
+            const e = helio('Earth', T);
+            const lon = Math.atan2(p.y - e.y, p.x - e.x) / RAD;
+            const precession = 1.396971 * T + 0.0003086 * T * T;
+            return norm(lon + precession + nutationLon(T));
+        }
+
+        function bodyLon(name, T) {
+            if (name === 'Sun') return sunLon(T);
+            if (name === 'Moon') return moonLon(T);
+            return planetLon(name, T);
+        }
+
+        const BODIES = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+
+        // 回傳各天體黃經；withRetro 時附上逆行判斷
+        function positions(ms, withRetro) {
+            const T = centuries(ms);
+            const out = {};
+            const dT = 0.5 / 36525;
+            for (const b of BODIES) {
+                const lon = bodyLon(b, T);
+                let retro = false;
+                if (withRetro && b !== 'Sun' && b !== 'Moon') {
+                    let diff = bodyLon(b, T + dT) - bodyLon(b, T - dT);
+                    diff = ((diff + 540) % 360) - 180;
+                    retro = diff < 0;
+                }
+                out[b] = { lon, retro };
+            }
+            return out;
+        }
+
+        // 上升點黃經：由恆星時、地理緯度與黃赤交角計算
+        function ascendant(ms, latDeg, lonDeg) {
+            const jd = julianDay(ms);
+            const T = (jd - 2451545.0) / 36525;
+            const gmst = norm(280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - T * T * T / 38710000);
+            const ramc = norm(gmst + lonDeg);
+            const eps = 23.439291 - 0.0130042 * T;
+            const asc = Math.atan2(cos(ramc), -(sin(ramc) * cos(eps) + Math.tan(latDeg * RAD) * sin(eps))) / RAD;
+            return norm(asc);
+        }
+
+        return { positions, ascendant, norm, BODIES };
+    })();
+
+    // 美國夏令時間判斷（local 月/日/時）
+    function usDaylightSaving(y, m, d, h) {
+        const nthSunday = (yy, m0, n) => {
+            const first = new Date(Date.UTC(yy, m0, 1)).getUTCDay();
+            return 1 + ((7 - first) % 7) + (n - 1) * 7;
+        };
+        const lastSunday = (yy, m0) => {
+            const last = new Date(Date.UTC(yy, m0 + 1, 0));
+            return last.getUTCDate() - last.getUTCDay();
+        };
+        let s, e;
+        if (y >= 2007) { s = [3, nthSunday(y, 2, 2)]; e = [11, nthSunday(y, 10, 1)]; }
+        else if (y >= 1987) { s = [4, nthSunday(y, 3, 1)]; e = [10, lastSunday(y, 9)]; }
+        else if (y >= 1967) { s = [4, lastSunday(y, 3)]; e = [10, lastSunday(y, 9)]; }
+        else return false;
+        const t = m * 10000 + d * 100 + h;
+        return t >= s[0] * 10000 + s[1] * 100 + 2 && t < e[0] * 10000 + e[1] * 100 + 2;
+    }
+</script>
+
+
+<!-- ============================================================
+     模組 3：運勢引擎（依本命盤與當前行星過運計算）
+     ============================================================ -->
+<script data-module="fortune">
+    const Fortune = (() => {
+        const ASPECTS = [
+            { angle: 0, name: '合相', type: 'c' },
+            { angle: 60, name: '六分相', type: 'soft' },
+            { angle: 90, name: '四分相', type: 'hard' },
+            { angle: 120, name: '三分相', type: 'soft' },
+            { angle: 180, name: '對分相', type: 'hard' }
+        ];
+
+        // 過運行星對本命點的影響：c=合相、soft=和諧相位、hard=緊張相位
+        const NATURE = {
+            Moon:    { c: 0.4,  soft: 0.5, hard: -0.4 },
+            Mercury: { c: 0.3,  soft: 0.5, hard: -0.4 },
+            Venus:   { c: 1.0,  soft: 1.0, hard: -0.3 },
+            Mars:    { c: -0.4, soft: 0.3, hard: -0.9 },
+            Jupiter: { c: 1.2,  soft: 1.0, hard: -0.2 },
+            Saturn:  { c: -0.8, soft: 0.3, hard: -1.0 },
+            Uranus:  { c: -0.3, soft: 0.2, hard: -0.6 },
+            Neptune: { c: -0.3, soft: 0.1, hard: -0.5 },
+            Pluto:   { c: -0.4, soft: 0.1, hard: -0.6 }
+        };
+
+        // 各行星對愛情、事業、財運的關聯權重
+        const CAT_W = {
+            Moon:    { love: 0.8, career: 0.3, wealth: 0.3 },
+            Mercury: { love: 0.3, career: 0.8, wealth: 0.5 },
+            Venus:   { love: 1.2, career: 0.4, wealth: 0.9 },
+            Mars:    { love: 0.5, career: 1.0, wealth: 0.4 },
+            Jupiter: { love: 0.6, career: 0.9, wealth: 1.2 },
+            Saturn:  { love: 0.4, career: 1.0, wealth: 0.7 },
+            Uranus:  { love: 0.5, career: 0.6, wealth: 0.5 },
+            Neptune: { love: 0.5, career: 0.3, wealth: 0.4 },
+            Pluto:   { love: 0.4, career: 0.6, wealth: 0.5 }
+        };
+
+        const ORB = { Moon: 5, Mercury: 3, Venus: 4, Mars: 4, Jupiter: 5, Saturn: 5, Uranus: 3, Neptune: 3, Pluto: 3 };
+        const NATAL_W = { Sun: 1.0, Moon: 0.9, ASC: 0.7 };
+        const POINT_NAME = { Sun: '本命太陽', Moon: '本命月亮', ASC: '上升點' };
+        const PLANET_NAME = { Moon: '月亮', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星' };
+        const PLANET_MEANING = {
+            Moon: '情緒與日常節奏', Mercury: '溝通、資訊與學習', Venus: '人緣、感情與金錢價值', Mars: '行動力與衝突',
+            Jupiter: '機會、成長與貴人', Saturn: '壓力、責任與長期考驗', Uranus: '突發變動與突破', Neptune: '直覺、靈感與迷惘', Pluto: '深層轉變與權力議題'
+        };
+
+        const ALL = ['Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+        const NO_MOON = ALL.filter(p => p !== 'Moon');
+        const SLOW = ['Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+
+        const angDist = (a, b) => {
+            const d = Math.abs(a - b) % 360;
+            return d > 180 ? 360 - d : d;
+        };
+
+        function aspectBetween(lonA, lonB, orb) {
+            const d = angDist(lonA, lonB);
+            for (const a of ASPECTS) if (Math.abs(d - a.angle) <= orb) return a;
+            return null;
+        }
+
+        // 某一時刻，過運行星對本命太陽、月亮、上升點形成的相位
+        function transitEvents(natal, ms, allowed) {
+            const pos = AstroCalc.positions(ms, false);
+            const events = [];
+            for (const p of allowed) {
+                for (const point of ['Sun', 'Moon', 'ASC']) {
+                    const d = angDist(pos[p].lon, natal[point]);
+                    for (const asp of ASPECTS) {
+                        const orb = Math.abs(d - asp.angle);
+                        if (orb < ORB[p]) {
+                            const strength = 1 - orb / ORB[p];
+                            events.push({
+                                planet: p, point, aspect: asp, strength,
+                                effect: NATURE[p][asp.type] * strength * NATAL_W[point]
+                            });
+                        }
+                    }
+                }
+            }
+            return events;
+        }
+
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+        function computePeriod(natal, startMs, count, stepDays, allowed, scale) {
+            const sum = { overall: 0, love: 0, career: 0, wealth: 0 };
+            const best = new Map();
+            for (let i = 0; i < count; i++) {
+                const ms = startMs + i * stepDays * 86400000;
+                for (const ev of transitEvents(natal, ms, allowed)) {
+                    sum.overall += ev.effect;
+                    sum.love += ev.effect * CAT_W[ev.planet].love;
+                    sum.career += ev.effect * CAT_W[ev.planet].career;
+                    sum.wealth += ev.effect * CAT_W[ev.planet].wealth;
+                    const key = ev.planet + '|' + ev.point + '|' + ev.aspect.angle;
+                    const cur = best.get(key);
+                    if (!cur || Math.abs(ev.effect) > Math.abs(cur.effect)) best.set(key, Object.assign({}, ev, { ms }));
+                }
+            }
+            const score = k => clamp(Math.round(66 + scale * sum[k] / count), 45, 98);
+            const events = Array.from(best.values())
+                .filter(e => Math.abs(e.effect) >= 0.08)
+                .sort((a, b) => Math.abs(b.effect) - Math.abs(a.effect));
+            return {
+                scores: { overall: score('overall'), love: score('love'), career: score('career'), wealth: score('wealth') },
+                events
+            };
+        }
+
+        function level(score) { return score >= 78 ? 'high' : (score >= 64 ? 'mid' : 'low'); }
+
+        const LEVEL_PREFIX = {
+            love:   { high: '愛情運勢順遂，', mid: '愛情運勢平穩，', low: '愛情上較容易有摩擦，' },
+            career: { high: '事業／學業有推進力，', mid: '事業／學業步調平穩，', low: '事業／學業需要多留心，' },
+            wealth: { high: '財運有利，', mid: '財運持平，', low: '財務宜保守，' }
+        };
+
+        const OVERALL_SENTENCE = {
+            high: '整體氣勢偏順，適合主動把握機會。',
+            mid: '整體節奏平穩，按計畫行事即可。',
+            low: '整體需要多一點耐心與彈性，重要決定可以多確認一次。'
+        };
+
+        const fmtDate = ms => {
+            const d = new Date(ms);
+            return (d.getMonth() + 1) + '/' + d.getDate();
+        };
+
+        function eventText(ev, showDate) {
+            const tone = ev.effect >= 0 ? '<span class="tone-good">有利</span>' : '<span class="tone-bad">考驗</span>';
+            const when = showDate ? fmtDate(ev.ms) + ' 前後，' : '';
+            return `${when}${PLANET_NAME[ev.planet]}與${POINT_NAME[ev.point]}形成${ev.aspect.name}（${tone}）：牽動${PLANET_MEANING[ev.planet]}。`;
+        }
+
+        // 產生文字說明（依太陽星座、上升星座、本期分數與相位）
+        function buildText(sunSign, ascSign, lead, res, showDate) {
+            const s = res.scores;
+            let html = `<p>${lead}以${sunSign.name}的「${sunSign.style}」為基調，加上${ascSign.name}上升的外在風格，${OVERALL_SENTENCE[level(s.overall)]}</p>`;
+            const evs = res.events.slice(0, 3);
+            if (evs.length) {
+                html += `<div class="event-title">🔭 關鍵行星相位</div><ul class="event-list">` +
+                    evs.map(e => `<li>${eventText(e, showDate)}</li>`).join('') + `</ul>`;
+            } else {
+                html += `<p>此期間沒有明顯的行星相位，整體以日常節奏為主。</p>`;
+            }
+            html += `<p>💗 ${LEVEL_PREFIX.love[level(s.love)]}${sunSign.tips.love}。</p>`;
+            html += `<p>💼 ${LEVEL_PREFIX.career[level(s.career)]}${sunSign.tips.career}。</p>`;
+            html += `<p>💰 ${LEVEL_PREFIX.wealth[level(s.wealth)]}${sunSign.tips.wealth}。</p>`;
+            return html;
+        }
+
+        return { computePeriod, buildText, eventText, aspectBetween, transitEvents, ALL, NO_MOON, SLOW, ASPECTS, level, fmtDate };
+    })();
+</script>
+
+
+<!-- ============================================================
+     模組 4：介面與流程
+     ============================================================ -->
+<script data-module="ui">
+    const $ = id => document.getElementById(id);
+    const yearSelect = $('yearSelect');
+    const monthSelect = $('monthSelect');
+    const daySelect = $('daySelect');
+    const targetYearSelect = $('targetYearSelect');
+    const countrySelect = $('countrySelect');
+    const citySelect = $('citySelect');
+
+    const curY = new Date().getFullYear();
+    for (let y = curY; y >= 1930; y--) yearSelect.add(new Option(`${y} 年`, y));
+    for (let m = 1; m <= 12; m++) monthSelect.add(new Option(`${m} 月`, m));
+    for (let ty = curY; ty <= curY + 10; ty++) targetYearSelect.add(new Option(`${ty} 西元年`, ty));
+    Object.keys(COUNTRIES).forEach(c => countrySelect.add(new Option(c, c)));
+
+    function updateDays() {
+        const keep = parseInt(daySelect.value) || 1;
+        daySelect.innerHTML = '';
+        const days = new Date(parseInt(yearSelect.value), parseInt(monthSelect.value), 0).getDate();
+        for (let d = 1; d <= days; d++) daySelect.add(new Option(`${d} 日`, d));
+        daySelect.value = Math.min(keep, days);
+    }
+
+    function updateManualPanel() {
+        const info = COUNTRIES[countrySelect.value];
+        const item = info.list[citySelect.selectedIndex];
+        const manual = item && item[1] === null;
+        $('manualPanel').style.display = manual ? 'block' : 'none';
+        if (manual && $('manTz').value === '') $('manTz').value = info.tz === null ? -5 : info.tz;
+    }
+
+    function updateCities() {
+        citySelect.innerHTML = '';
+        COUNTRIES[countrySelect.value].list.forEach((c, i) => citySelect.add(new Option(c[0], i)));
+        $('manTz').value = '';
+        updateManualPanel();
+    }
+
+    yearSelect.addEventListener('change', updateDays);
+    monthSelect.addEventListener('change', updateDays);
+    countrySelect.addEventListener('change', updateCities);
+    citySelect.addEventListener('change', updateManualPanel);
+    updateDays();
+    updateCities();
+
+    function switchTab(tabKey, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        $(`tab-${tabKey}`).classList.add('active');
+    }
+
+    function showError(msg) {
+        const el = $('errorMsg');
+        el.innerText = msg;
+        el.style.display = msg ? 'block' : 'none';
+    }
+
+    function signOf(lon) { return SIGNS[Math.floor(lon / 30) % 12]; }
+    function fmtDeg(lon) {
+        const inSign = lon % 30;
+        const deg = Math.floor(inSign);
+        const min = Math.floor((inSign - deg) * 60);
+        return `${deg}°${String(min).padStart(2, '0')}′`;
+    }
+
+    function renderScoresHtml(s) {
+        const row = (label, v) => `
+            <div class="score-row">
+                <div class="score-header"><span>${label}</span><b>${v}%</b></div>
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:${v}%;"></div></div>
+            </div>`;
+        return row('整體運指數', s.overall) + row('愛情運指數', s.love) + row('事(學)業運指數', s.career) + row('財運指數', s.wealth);
+    }
+
+    // 讀取表單並換算出生時刻（UTC 毫秒）、緯度、經度
+    function readBirthInput() {
+        const y = parseInt(yearSelect.value), m = parseInt(monthSelect.value), d = parseInt(daySelect.value);
+        let hh, mm = 0;
+        const exact = $('exactTime').value;
+        if (exact) {
+            [hh, mm] = exact.split(':').map(Number);
+        } else {
+            hh = parseInt($('hourSelect').value);
+        }
+
+        const country = countrySelect.value;
+        const info = COUNTRIES[country];
+        const item = info.list[citySelect.selectedIndex];
+        let lat = item[1], lon = item[2], tz = info.tz === null ? item[3] : info.tz;
+
+        if (lat === null) {
+            lat = parseFloat($('manLat').value);
+            lon = parseFloat($('manLon').value);
+            tz = parseFloat($('manTz').value);
+            if (isNaN(lat) || isNaN(lon) || isNaN(tz)) return { error: '請輸入出生地的緯度、經度與時區。' };
+            if (lat < -66 || lat > 66) return { error: '緯度需介於 -66 到 66 之間（極圈附近上升點無法穩定計算）。' };
+            if (lon < -180 || lon > 180) return { error: '經度需介於 -180 到 180 之間。' };
+        }
+
+        let dst = $('dstCheck').checked;
+        if (country === '美國' && usDaylightSaving(y, m, d, hh)) dst = true;
+
+        const ms = Date.UTC(y, m - 1, d, hh, mm) - (tz + (dst ? 1 : 0)) * 3600000;
+        return { ms, lat, lon, y, m, d, hh, mm, country, city: item[0] };
+    }
+
+    function generateAllAnalysis() {
+        showError('');
+        const inp = readBirthInput();
+        if (inp.error) { showError(inp.error); return; }
+
+        const tYear = parseInt(targetYearSelect.value);
+        const pos = AstroCalc.positions(inp.ms, true);
+        const ascLon = AstroCalc.ascendant(inp.ms, inp.lat, inp.lon);
+        const sun = signOf(pos.Sun.lon), moon = signOf(pos.Moon.lon), asc = signOf(ascLon);
+        const sunIdx = SIGNS.indexOf(sun), ascIdx = SIGNS.indexOf(asc);
+
+        // 標頭
+        $('dispSunSign').innerText = `${sun.sym} ${sun.name}（${sun.elem}）`;
+        $('dispMoonSign').innerText = `${moon.sym} ${moon.name}（${moon.elem}）`;
+        $('dispAscSign').innerText = `${asc.sym} ${asc.name}（${asc.elem}/${asc.qual}星座）`;
+        $('dispSunDeg').innerText = fmtDeg(pos.Sun.lon) + (pos.Sun.lon % 30 < 0.5 || pos.Sun.lon % 30 > 29.5 ? '　接近星座交界，建議核對出生時間' : '');
+        $('dispMoonDeg').innerText = fmtDeg(pos.Moon.lon);
+        $('dispAscDeg').innerText = fmtDeg(ascLon);
+        const timeStr = `${String(inp.hh).padStart(2, '0')}:${String(inp.mm).padStart(2, '0')}`;
+        $('dispBirthPlace').innerText = `📍 出生地點：${inp.country} ${inp.city} ｜ 出生時間：${inp.y}年${inp.m}月${inp.d}日 ${timeStr}`;
+
+        // 開運資訊（依太陽星座）
+        const DIRS = { '火象': '正南方', '土象': '正北方', '風象': '正東方', '水象': '正西方' };
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+        $('luckNum').innerText = sun.nums;
+        $('luckColor').innerText = sun.colors;
+        $('luckDir').innerText = DIRS[sun.elem];
+        $('luckHour').innerText = SHICHEN[(sunIdx * 5 + dayOfYear) % 12];
+        $('luckSign').innerText = SIGNS[(sunIdx + 4) % 12].name;
+
+        // Tab 1：十大行星卡片
+        $('planetCards').innerHTML = PLANET_INFO.map(p => {
+            const lon = pos[p.key].lon;
+            const sg = signOf(lon);
+            const house = (SIGNS.indexOf(sg) - ascIdx + 12) % 12;
+            const asp = Fortune.aspectBetween(lon, ascLon, 6);
+            const aspText = asp ? `與上升點形成${asp.name}` : '與上升點無緊密相位';
+            const retro = pos[p.key].retro ? ' ℞' : '';
+            return `
+            <div class="planet-card">
+                <h4><span>${p.label}</span><span style="color:var(--accent-gold);">${sg.sym} ${sg.name} ${fmtDeg(lon)}${retro}</span></h4>
+                <p>${p.desc}在${sg.name}，傾向以「${sg.style}」的方式運作。</p>
+                <div class="planet-relation">💡 <b>落第 ${house + 1} 宮（${HOUSE_MEANING[house]}）</b>；${aspText}。</div>
+            </div>`;
+        }).join('') + `
+            <div class="planet-card" style="border-left-color: var(--accent-gold);">
+                <h4><span>🌅 上升點 (ASC)</span><span style="color:var(--accent-gold);">${asc.sym} ${asc.name} ${fmtDeg(ascLon)}</span></h4>
+                <p>第 1 宮的起點，主宰第一印象、外貌氣質與面對世界的方式，在${asc.name}展現為「${asc.style}」。</p>
+                <div class="planet-relation">💡 上升點是所有行星能量向外表達的入口，其他行星的宮位皆以它為基準。</div>
+            </div>`;
+
+        // Tab 2：模式、元素、陰陽
+        $('ascModeTitle').innerText = `⚖️ 上升 ${asc.name} 的模式特質：【${asc.qual}星座】`;
+        const MODE = {
+            '基本': '<b>基本星座上升（白羊、巨蟹、天秤、摩羯）：</b>具備強烈的自發性與開創精神。習慣主動邁出第一步，面對環境變化能迅速採取行動，人生態度帶有明確的方向感與領導欲望。',
+            '固定': '<b>固定星座上升（金牛、獅子、天蠍、水瓶）：</b>具備高度的專注力、堅毅度與穩定性。一旦認定目標就不輕易動搖，外在表現沉穩可靠，但需留意固執與抗拒改變的傾向。',
+            '變動': '<b>變動星座上升（雙子、處女、射手、雙魚）：</b>具備極佳的環境適應力與多元靈活性。善於觀察局勢並快速調整姿態，多才多藝且具備優異的協調能力，需留意方向不夠堅定。'
+        };
+        $('ascModeDesc').innerHTML = MODE[asc.qual];
+
+        $('ascElemTitle').innerText = `🔥 上升 ${asc.name} 的四元素特質：【${asc.elem}星座】`;
+        const ELEM = {
+            '火象': '<b>火象上升（白羊、獅子、射手）：</b>外在展現熱情、自信、直率與勇氣。第一印象充滿活力，習慣以直覺與意志引導行動，勇於接受挑戰並感染他人。',
+            '土象': '<b>土象上升（金牛、處女、摩羯）：</b>外在展現務實、沉穩、謹慎與秩序感。給人安全感與專業信任感，習慣以實際經驗與結構化思維處理事務。',
+            '風象': '<b>風象上升（雙子、天秤、水瓶）：</b>外在展現理性、友善與靈活的溝通能力。給人聰慧、易於接近的印象，重視資訊交流與客觀的多面向視角。',
+            '水象': '<b>水象上升（巨蟹、天蠍、雙魚）：</b>外在展現敏銳、細膩與富同理心。給人溫和或帶神秘感的印象，對周遭氣氛有強烈直覺，習慣以情感連結世界。'
+        };
+        $('ascElemDesc').innerHTML = ELEM[asc.elem];
+
+        $('ascPolTitle').innerText = `☯️ 上升 ${asc.name} 的陰陽性：【${asc.pol}】`;
+        $('ascPolDesc').innerHTML = asc.pol === '陽性'
+            ? '<b>陽性（火象、風象）：</b>傾向外放、主動，習慣向外表達與行動，社交上較容易主動開啟話題。'
+            : '<b>陰性（土象、水象）：</b>傾向內斂、接納，習慣先觀察、感受再回應，給人穩重或含蓄的印象。';
+
+        // Tab 3–7：運勢（本命太陽、月亮、上升點 × 當前行星位置）
+        const natal = { Sun: pos.Sun.lon, Moon: pos.Moon.lon, ASC: ascLon };
+        const now = Date.now();
+        const DAY = 86400000;
+
+        const today = Fortune.computePeriod(natal, now, 1, 1, Fortune.ALL, 12);
+        const tomorrow = Fortune.computePeriod(natal, now + DAY, 1, 1, Fortune.ALL, 12);
+        const week = Fortune.computePeriod(natal, now, 7, 1, Fortune.NO_MOON, 18);
+
+        const nd = new Date();
+        const monthStart = new Date(nd.getFullYear(), nd.getMonth(), 1, 12).getTime();
+        const monthDays = new Date(nd.getFullYear(), nd.getMonth() + 1, 0).getDate();
+        const month = Fortune.computePeriod(natal, monthStart, monthDays, 1, Fortune.NO_MOON, 18);
+
+        const yearStart = new Date(tYear, 0, 1, 12).getTime();
+        const year = Fortune.computePeriod(natal, yearStart, 122, 3, Fortune.SLOW, 22);
+
+        $('todayScores').innerHTML = renderScoresHtml(today.scores);
+        $('todayText').innerHTML = Fortune.buildText(sun, asc, '今日', today, false);
+        $('tomorrowScores').innerHTML = renderScoresHtml(tomorrow.scores);
+        $('tomorrowText').innerHTML = Fortune.buildText(sun, asc, '明日', tomorrow, false);
+        $('weekScores').innerHTML = renderScoresHtml(week.scores);
+        $('weekText').innerHTML = Fortune.buildText(sun, asc, '本週', week, true);
+        $('monthScores').innerHTML = renderScoresHtml(month.scores);
+        $('monthText').innerHTML = Fortune.buildText(sun, asc, '本月', month, true);
+
+        // 本月標籤（依太陽星座與月份）
+        const DIR8 = ['正東方向', '東南方向', '正南方向', '西南方向', '正西方向', '西北方向', '正北方向', '東北方向'];
+        const LEISURE = {
+            '火象': ['戶外運動', '健身或球類'], '土象': ['園藝或料理', '整理居家'],
+            '風象': ['逛論壇', '閱讀與聊天'], '水象': ['泡澡聽音樂', '看電影放鬆']
+        };
+        const thisMonth = nd.getMonth() + 1;
+        $('mDir').innerText = DIR8[(sunIdx + thisMonth) % 8];
+        $('mLeisure').innerText = LEISURE[sun.elem][thisMonth % 2];
+        $('mFriend').innerText = SIGNS[(sunIdx + 2) % 12].name;
+        $('mWealth').innerText = SIGNS[(sunIdx + 4) % 12].name;
+        $('mAnnoy').innerText = SIGNS[(sunIdx + 3) % 12].name;
+
+        const bestGood = month.events.find(e => e.effect > 0);
+        const bestBad = month.events.find(e => e.effect < 0);
+        $('mStrength').innerHTML = '💡 <b>本月優勢：</b>' + (bestGood ? Fortune.eventText(bestGood, true) : '本月沒有特別突出的助力相位，穩定發揮即可。');
+        $('mWeak').innerHTML = '⚠️ <b>本月弱勢：</b>' + (bestBad ? Fortune.eventText(bestBad, true) : '本月沒有明顯的壓力相位，保持日常警覺即可。');
+
+        $('tabYearLabel').innerText = tYear;
+        $('yearTitle').innerText = `${tYear} 西元年流年過運深度分析`;
+        $('yearScores').innerHTML = renderScoresHtml(year.scores);
+        $('yearText').innerHTML = Fortune.buildText(sun, asc, `${tYear} 年`, year, true);
+
+        $('resultContainer').style.display = 'block';
+        $('resultContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+</script>
+
+</body>
+</html>
