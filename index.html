@@ -413,13 +413,17 @@
                 <label for="manTz">時區（UTC 偏移小時）</label>
                 <input type="number" id="manTz" step="0.5" min="-12" max="14" placeholder="例如 8">
             </div>
+            <div style="display:flex; align-items:flex-end;">
+                <label style="font-weight:normal; color:var(--text-sub); margin:0; display:flex; gap:6px; align-items:center;"><input type="checkbox" id="dstCheck" style="width:auto;">當時實施夏令時間</label>
+            </div>
         </div>
     </div>
 
     <div class="check-row">
-        <input type="checkbox" id="dstCheck">
-        <label for="dstCheck" style="margin:0; font-weight:normal; color:var(--text-sub);">出生當時實施夏令時間（美國會自動判斷，其他地區請自行勾選）</label>
+        <input type="checkbox" id="stdCheck">
+        <label for="stdCheck" style="margin:0; font-weight:normal; color:var(--text-sub);">我輸入的出生時間已是標準時間（已自行扣除夏令時間，程式不再自動扣除）</label>
     </div>
+    <div class="hint" style="margin:-6px 0 12px 0;">臺灣、中國大陸、香港、日本、新加坡與美國會依歷史時區資料自動判斷當時是否實施夏令時間（例如臺灣 1974、1975 年夏季）；病歷或戶籍上的出生時刻若已扣過夏令，請勾選上方選項。</div>
 
     <button class="btn-submit" onclick="generateAllAnalysis()">開始生成專屬深度星盤與運勢</button>
     <div class="error-msg" id="errorMsg"></div>
@@ -460,6 +464,7 @@
         <div class="tab-menu">
             <button class="tab-btn active" onclick="switchTab('planets', this)">十大行星與上升解析</button>
             <button class="tab-btn" onclick="switchTab('ascendant', this)">上升星座模式與元素</button>
+            <button class="tab-btn" onclick="switchTab('natal', this)">本命綜合解讀</button>
             <button class="tab-btn" onclick="switchTab('today', this)">今日運勢</button>
             <button class="tab-btn" onclick="switchTab('tomorrow', this)">明日運勢</button>
             <button class="tab-btn" onclick="switchTab('week', this)">本周運勢</button>
@@ -486,6 +491,20 @@
             <div class="traits-box">
                 <h4 id="ascPolTitle">☯️ 上升星座的陰陽性</h4>
                 <p class="analysis-box" id="ascPolDesc"></p>
+            </div>
+        </div>
+
+        <div id="tab-natal" class="tab-content">
+            <h3 style="color:#fbbf24; margin-top:0;">🧭 本命盤綜合解讀</h3>
+            <div class="traits-box"><h4>🔑 命主星（整張盤的總開關）</h4><div class="analysis-box" id="natalRuler"></div></div>
+            <div class="traits-box"><h4 id="natalPhaseTitle">🌗 月相</h4><div class="analysis-box" id="natalPhase"></div></div>
+            <div class="traits-box"><h4>⚖️ 元素與模式分布</h4>
+                <div class="scores-grid" id="natalBars"></div>
+                <div class="analysis-box" id="natalBalance"></div>
+            </div>
+            <div class="traits-box"><h4>🔗 本命相位（由最緊密者排序）</h4>
+                <ul class="event-list" id="natalAspects"></ul>
+                <div class="hint">天王星、海王星、冥王星彼此之間的相位為同世代共有，不列入。相位容許度依行星而異（日月 8°、一般行星 6°、外行星 4°）。</div>
             </div>
         </div>
 
@@ -601,26 +620,26 @@
 
     // 地點：[名稱, 緯度, 經度]；緯經度為 null 代表需手動輸入
     const COUNTRIES = {
-        '臺灣': { tz: 8, list: [
+        '臺灣': { zone: 'Asia/Taipei', tz: 8, list: [
             ['臺北市', 25.03, 121.56], ['新北市', 25.01, 121.46], ['桃園市', 24.99, 121.30], ['臺中市', 24.15, 120.67],
             ['臺南市', 22.99, 120.21], ['高雄市', 22.63, 120.30], ['基隆市', 25.13, 121.74], ['新竹市', 24.81, 120.97],
             ['嘉義市', 23.48, 120.45], ['新竹縣', 24.84, 121.01], ['苗栗縣', 24.56, 120.82], ['彰化縣', 24.08, 120.54],
             ['南投縣', 23.91, 120.69], ['雲林縣', 23.71, 120.43], ['嘉義縣', 23.46, 120.32], ['屏東縣', 22.67, 120.49],
             ['宜蘭縣', 24.75, 121.75], ['花蓮縣', 23.98, 121.60], ['臺東縣', 22.76, 121.14], ['澎湖縣', 23.57, 119.57],
             ['金門縣', 24.45, 118.38], ['連江縣', 26.16, 119.95] ] },
-        '中國大陸': { tz: 8, list: [
+        '中國大陸': { zone: 'Asia/Shanghai', tz: 8, list: [
             ['北京市', 39.90, 116.41], ['上海市', 31.23, 121.47], ['廣東省(廣州/深圳)', 23.13, 113.26], ['浙江省(杭州)', 30.27, 120.15],
             ['江蘇省(南京)', 32.06, 118.80], ['四川省(成都)', 30.57, 104.07], ['福建省(福州/廈門)', 26.07, 119.30],
             ['湖北省(武漢)', 30.59, 114.31], ['其他省市（自行輸入經緯度）', null, null] ] },
-        '香港/澳門': { tz: 8, list: [
-            ['香港島', 22.28, 114.16], ['九龍', 22.32, 114.17], ['新界', 22.39, 114.15], ['澳門半島', 22.20, 113.54], ['氹仔/路環', 22.16, 113.56] ] },
-        '日本': { tz: 9, list: [
+        '香港/澳門': { zone: 'Asia/Hong_Kong', tz: 8, list: [
+            ['香港島', 22.28, 114.16], ['九龍', 22.32, 114.17], ['新界', 22.39, 114.15], ['澳門半島', 22.20, 113.54, 'Asia/Macau'], ['氹仔/路環', 22.16, 113.56, 'Asia/Macau'] ] },
+        '日本': { zone: 'Asia/Tokyo', tz: 9, list: [
             ['東京都', 35.68, 139.69], ['大阪府', 34.69, 135.50], ['京都府', 35.01, 135.77], ['北海道(札幌)', 43.06, 141.35],
             ['福岡縣', 33.59, 130.40], ['愛知縣(名古屋)', 35.18, 136.91], ['其他道府縣（自行輸入經緯度）', null, null] ] },
         '美國': { tz: null, list: [
-            ['加利福尼亞州(洛杉磯)', 34.05, -118.24, -8], ['紐約州(紐約市)', 40.71, -74.01, -5], ['德克薩斯州(休士頓)', 29.76, -95.37, -6],
-            ['華盛頓州(西雅圖)', 47.61, -122.33, -8], ['伊利諾州(芝加哥)', 41.88, -87.63, -6], ['其他州別（自行輸入經緯度）', null, null] ] },
-        '新加坡': { tz: 8, list: [
+            ['加利福尼亞州(洛杉磯)', 34.05, -118.24, 'America/Los_Angeles'], ['紐約州(紐約市)', 40.71, -74.01, 'America/New_York'], ['德克薩斯州(休士頓)', 29.76, -95.37, 'America/Chicago'],
+            ['華盛頓州(西雅圖)', 47.61, -122.33, 'America/Los_Angeles'], ['伊利諾州(芝加哥)', 41.88, -87.63, 'America/Chicago'], ['其他州別（自行輸入經緯度）', null, null] ] },
+        '新加坡': { zone: 'Asia/Singapore', tz: 8, list: [
             ['新加坡中央區', 1.29, 103.85], ['東部區域', 1.35, 103.95], ['西部區域', 1.34, 103.70], ['北部區域', 1.43, 103.79] ] },
         '其他國家': { tz: 0, list: [['自行輸入經緯度', null, null]] }
     };
@@ -786,24 +805,36 @@
         return { positions, ascendant, norm, BODIES };
     })();
 
-    // 美國夏令時間判斷（local 月/日/時）
-    function usDaylightSaving(y, m, d, h) {
-        const nthSunday = (yy, m0, n) => {
-            const first = new Date(Date.UTC(yy, m0, 1)).getUTCDay();
-            return 1 + ((7 - first) % 7) + (n - 1) * 7;
-        };
-        const lastSunday = (yy, m0) => {
-            const last = new Date(Date.UTC(yy, m0 + 1, 0));
-            return last.getUTCDate() - last.getUTCDay();
-        };
-        let s, e;
-        if (y >= 2007) { s = [3, nthSunday(y, 2, 2)]; e = [11, nthSunday(y, 10, 1)]; }
-        else if (y >= 1987) { s = [4, nthSunday(y, 3, 1)]; e = [10, lastSunday(y, 9)]; }
-        else if (y >= 1967) { s = [4, lastSunday(y, 3)]; e = [10, lastSunday(y, 9)]; }
-        else return false;
-        const t = m * 10000 + d * 100 + h;
-        return t >= s[0] * 10000 + s[1] * 100 + 2 && t < e[0] * 10000 + e[1] * 100 + 2;
-    }
+    // 出生當地時間 → UTC：使用瀏覽器內建的歷史時區資料庫（含各地歷年夏令時間）
+    const LocalTime = (() => {
+        const fmtCache = {};
+        function offsetMin(zone, utcMs) {
+            const f = fmtCache[zone] || (fmtCache[zone] = new Intl.DateTimeFormat('en-US', {
+                timeZone: zone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',
+                hour: 'numeric', minute: 'numeric', second: 'numeric' }));
+            const p = {};
+            f.formatToParts(new Date(utcMs)).forEach(x => { p[x.type] = parseInt(x.value, 10); });
+            const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+            return Math.round((asUtc - Math.floor(utcMs / 1000) * 1000) / 60000);
+        }
+        // 標準時間偏移：取該年 1/1 與 7/1 兩個偏移中較小者（夏令時間讓偏移變大）
+        function standardOffsetMin(zone, y) {
+            return Math.min(offsetMin(zone, Date.UTC(y, 0, 1, 12)), offsetMin(zone, Date.UTC(y, 6, 1, 12)));
+        }
+        // 回傳 { utcMs, offsetMin, dst }；assumeStandard 為 true 時，輸入視為標準時間（不再自動扣夏令）
+        function toUtc(y, m, d, hh, mm, zone, assumeStandard) {
+            const naive = Date.UTC(y, m - 1, d, hh, mm);
+            const std = standardOffsetMin(zone, y);
+            if (assumeStandard) return { utcMs: naive - std * 60000, offsetMin: std, dst: false };
+            let off = offsetMin(zone, naive - std * 60000);
+            for (let i = 0; i < 3; i++) off = offsetMin(zone, naive - off * 60000);
+            return { utcMs: naive - off * 60000, offsetMin: off, dst: off > std };
+        }
+        function supported(zone) {
+            try { offsetMin(zone, Date.UTC(2000, 0, 1)); return true; } catch (e) { return false; }
+        }
+        return { toUtc, supported, standardOffsetMin };
+    })();
 </script>
 
 
@@ -967,6 +998,180 @@
 
 
 <!-- ============================================================
+     模組 3.5：本命盤解讀引擎（入廟旺陷、命主星、月相、元素模式、本命相位）
+     ============================================================ -->
+<script data-module="interpret">
+    const Interpret = (() => {
+        // 行星功能簡述
+        const FUNC = {
+            Sun: '自我與人生目標', Moon: '情緒與安全感', Mercury: '思考與溝通', Venus: '感情與價值觀', Mars: '行動與慾望',
+            Jupiter: '成長與信念', Saturn: '責任與限制', Uranus: '變革與獨立', Neptune: '理想與直覺', Pluto: '轉化與權力'
+        };
+        const NAME = {
+            Sun: '太陽', Moon: '月亮', Mercury: '水星', Venus: '金星', Mars: '火星',
+            Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星', ASC: '上升點'
+        };
+        // 各星座優勢與盲點（索引同 SIGNS：白羊=0）
+        const SIGN_EXTRA = [
+            { gift: '行動果斷、勇於開創', shadow: '急躁、容易衝動' },
+            { gift: '穩定耐心、重視實質', shadow: '固執、不易改變' },
+            { gift: '好奇多才、反應敏捷', shadow: '注意力分散、不夠深入' },
+            { gift: '體貼顧家、直覺敏銳', shadow: '情緒起伏、過度防衛' },
+            { gift: '自信大方、有感染力', shadow: '愛面子、需要被肯定' },
+            { gift: '細心務實、樂於服務', shadow: '過度挑剔、容易焦慮' },
+            { gift: '公平協調、富有美感', shadow: '猶豫不決、太在意他人眼光' },
+            { gift: '專注深刻、洞察力強', shadow: '多疑、控制慾' },
+            { gift: '樂觀開闊、重視理想', shadow: '說話過直、承諾較鬆散' },
+            { gift: '負責耐力、善於規劃', shadow: '過度嚴肅、壓抑情感' },
+            { gift: '獨立創新、理性客觀', shadow: '疏離、固執己見' },
+            { gift: '富同情與想像、靈感強', shadow: '逃避現實、界線不清' }
+        ];
+        // 古典尊貴（星座索引：白羊0 金牛1 雙子2 巨蟹3 獅子4 處女5 天秤6 天蠍7 射手8 摩羯9 水瓶10 雙魚11）
+        const DIGNITY = {
+            Sun:     { dom: [4],     exalt: [0],  det: [10],    fall: [6] },
+            Moon:    { dom: [3],     exalt: [1],  det: [9],     fall: [7] },
+            Mercury: { dom: [2, 5],  exalt: [5],  det: [8, 11], fall: [11] },
+            Venus:   { dom: [1, 6],  exalt: [11], det: [7, 0],  fall: [5] },
+            Mars:    { dom: [0, 7],  exalt: [9],  det: [6, 1],  fall: [3] },
+            Jupiter: { dom: [8, 11], exalt: [3],  det: [2, 5],  fall: [9] },
+            Saturn:  { dom: [9, 10], exalt: [6],  det: [3, 4],  fall: [0] },
+            Uranus:  { dom: [10] }, Neptune: { dom: [11] }, Pluto: { dom: [7] }
+        };
+        const DIGNITY_TEXT = {
+            dom: ['本位（入廟）', '落在自己主管的星座，力量穩固，表達自然順暢。'],
+            exalt: ['入旺', '落在受到禮遇的星座，容易發揮得特別出色。'],
+            det: ['陷（失勢）', '落在與本性相反的星座，使用這份能量比較不順手，需要多花力氣調整方式。'],
+            fall: ['落陷（弱）', '落在較難施展的星座，容易信心不足或使不上力，需要靠後天累積來補強。']
+        };
+        function dignity(key, signIdx) {
+            const d = DIGNITY[key];
+            if (!d) return null;
+            for (const t of ['dom', 'exalt', 'det', 'fall']) {
+                if (d[t] && d[t].includes(signIdx)) return { type: t, label: DIGNITY_TEXT[t][0], text: DIGNITY_TEXT[t][1] };
+            }
+            return null;
+        }
+
+        const RETRO_TEXT = '出生時逆行：這項功能偏向向內運作，常需要多一點時間消化，才會用行動或言語表達出來。';
+
+        // 命主星（上升星座的守護星；古典為主，現代共同守護星另註）
+        const RULER = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
+        const RULER_MODERN = { 7: 'Pluto', 10: 'Uranus', 11: 'Neptune' };
+
+        function chartRuler(ascIdx, lons, ascLon, SIGNS, HOUSE_MEANING) {
+            const key = RULER[ascIdx];
+            const lon = lons[key];
+            const sIdx = Math.floor(lon / 30) % 12;
+            const house = (sIdx - ascIdx + 12) % 12;
+            let html = `<p>上升在<b>${SIGNS[ascIdx].name}</b>，命主星（守護星）是<b>${NAME[key]}</b>`;
+            if (RULER_MODERN[ascIdx]) html += `（現代占星另以${NAME[RULER_MODERN[ascIdx]]}為共同守護星）`;
+            html += `。它位於<b>${SIGNS[sIdx].name}</b>、第 <b>${house + 1} 宮</b>（${HOUSE_MEANING[house]}）。</p>`;
+            html += `<p>命主星像是整張盤的「總開關」：你人生的主要動力與課題，常會圍繞「${HOUSE_MEANING[house]}」這個領域展開，並帶有${SIGNS[sIdx].name}「${SIGNS[sIdx].style}」的色彩。${NAME[key]}掌管的是${FUNC[key]}，因此這方面的處理方式，會明顯影響你整體的運勢走向。</p>`;
+            return html;
+        }
+
+        const PHASES = [
+            ['新月期', '新的開始與直覺主導。做事憑感覺與衝勁，擅長開創，但容易在看清全貌前就行動。'],
+            ['眉月期', '成長初期，需要突破舊有框架。有想擺脫過去、證明自己的動力，過程中會遇到阻力。'],
+            ['上弦月', '行動與挑戰並存。習慣面對危機與抉擇，擅長處理問題，也容易在壓力下與環境對抗。'],
+            ['盈凸月', '精益求精與自我修正。重視細節與方法，有追求完美、不斷調整的傾向。'],
+            ['滿月期', '圓滿與覺察。太陽與月亮位置相對，容易同時看見理性與情感兩端，人際與關係是重要課題。'],
+            ['虧凸月', '分享與傳承。願意把所學傳遞給別人，重視意義，有教導或影響他人的傾向。'],
+            ['下弦月', '重新評估與價值轉換。會質疑既有信念，經歷內在重整後建立自己的觀點。'],
+            ['殘月期', '釋放與總結。帶著使命感與內省氣質，擅長收尾、轉化與看見事物的結局。']
+        ];
+        function moonPhase(sunLon, moonLon) {
+            const a = ((moonLon - sunLon) % 360 + 360) % 360;
+            const p = PHASES[Math.floor(a / 45) % 8];
+            return { angle: a, name: p[0], text: p[1] };
+        }
+
+        const ELEM_NAMES = ['火象', '土象', '風象', '水象'];
+        const MODE_NAMES = ['基本', '固定', '變動'];
+        const ELEM_OF = i => ['火象', '土象', '風象', '水象'][i % 4];
+        const MODE_OF = i => ['基本', '固定', '變動'][i % 3];
+        const ELEM_HI = {
+            '火象': '熱情、主動、有行動力，但容易急躁、缺少耐性。',
+            '土象': '務實、穩定、重視安全感，但容易保守、不願冒險。',
+            '風象': '理性、善於思考與溝通，但容易想得多做得少、情感上抽離。',
+            '水象': '感受深、同理心強，但容易受情緒左右、想太多。'
+        };
+        const ELEM_LO = {
+            '火象': '火象偏少：較缺乏自發的衝勁與自信，需要刻意替自己「啟動」，設定小目標並付諸行動。',
+            '土象': '土象偏少：對現實細節、金錢與身體照顧較容易忽略，需要刻意落實計畫與日常規律。',
+            '風象': '風象偏少：較少從旁觀角度看事情，情緒容易主導判斷，多與人討論、寫下想法會有幫助。',
+            '水象': '水象偏少：較不容易察覺他人與自己的細微情緒，多留意感受、練習傾聽能補強。'
+        };
+        const MODE_HI = {
+            '基本': '基本星座偏多：愛開創、行動快，但可能開頭熱情、後勁不足。',
+            '固定': '固定星座偏多：堅持穩定、意志強，但遇到變動時容易僵住或抗拒。',
+            '變動': '變動星座偏多：靈活、適應力強，但可能缺乏定見、容易被環境牽著走。'
+        };
+
+        // 元素與模式：太陽、月亮、上升點權重 2，其餘行星權重 1
+        function balance(lons, ascLon) {
+            const W = { Sun: 2, Moon: 2, ASC: 2 };
+            const e = { '火象': 0, '土象': 0, '風象': 0, '水象': 0 };
+            const m = { '基本': 0, '固定': 0, '變動': 0 };
+            let total = 0;
+            const all = Object.assign({}, lons, { ASC: ascLon });
+            for (const k in all) {
+                const w = W[k] || 1;
+                const idx = Math.floor(all[k] / 30) % 12;
+                e[ELEM_OF(idx)] += w; m[MODE_OF(idx)] += w; total += w;
+            }
+            const sortE = Object.entries(e).sort((a, b) => b[1] - a[1]);
+            const sortM = Object.entries(m).sort((a, b) => b[1] - a[1]);
+            const notes = [];
+            const topE = sortE[0], lowE = sortE[sortE.length - 1];
+            if (topE[1] / total >= 0.35) notes.push(`<b>${topE[0]}最強（${topE[1]}/${total}）</b>：${ELEM_HI[topE[0]]}`);
+            else notes.push('四元素分布相當平均，沒有特別偏重某一種特質，性格的彈性較大。');
+            if (lowE[1] / total <= 0.12) notes.push(ELEM_LO[lowE[0]]);
+            const topM = sortM[0];
+            if (topM[1] / total >= 0.42) notes.push(MODE_HI[topM[0]]);
+            return { e, m, total, notes };
+        }
+
+        // 本命相位（含上升點）；世代行星之間的相位為同世代共有，不列入
+        const ASPECTS = [
+            { angle: 0, name: '合相', text: '能量合一、互相強化，是這張盤的重點之一。' },
+            { angle: 60, name: '六分相', text: '兩者之間容易取得合作與機會，需要主動運用才有感。' },
+            { angle: 90, name: '四分相', text: '內在有張力與摩擦，是推動你成長與採取行動的壓力來源。' },
+            { angle: 120, name: '三分相', text: '彼此配合流暢，屬於天生就比較順的才能，但容易視為理所當然。' },
+            { angle: 180, name: '對分相', text: '兩端拉扯，需要學習在兩種需求之間取得平衡。' }
+        ];
+        const ORB_BASE = { Sun: 8, Moon: 8, ASC: 6, Mercury: 6, Venus: 6, Mars: 6, Jupiter: 6, Saturn: 6, Uranus: 4, Neptune: 4, Pluto: 4 };
+        const GEN = ['Uranus', 'Neptune', 'Pluto'];
+        function natalAspects(lons, ascLon) {
+            const all = Object.assign({}, lons, { ASC: ascLon });
+            const keys = Object.keys(all);
+            const out = [];
+            for (let i = 0; i < keys.length; i++) {
+                for (let j = i + 1; j < keys.length; j++) {
+                    const a = keys[i], b = keys[j];
+                    if (GEN.includes(a) && GEN.includes(b)) continue;
+                    let d = Math.abs(all[a] - all[b]) % 360; if (d > 180) d = 360 - d;
+                    const base = (ORB_BASE[a] + ORB_BASE[b]) / 2;
+                    for (const asp of ASPECTS) {
+                        const orb = Math.abs(d - asp.angle);
+                        const limit = asp.angle === 60 ? Math.max(2, base - 2) : base;
+                        if (orb <= limit) out.push({ a, b, asp, orb, tight: orb / limit });
+                    }
+                }
+            }
+            out.sort((x, y) => x.tight - y.tight);
+            return out;
+        }
+        function aspectLine(x) {
+            return `<li><b>${NAME[x.a]}</b>（${FUNC[x.a] || '外在形象'}）${x.asp.name}<b>${NAME[x.b]}</b>（${FUNC[x.b] || '外在形象'}），誤差 ${x.orb.toFixed(1)}°：${x.asp.text}</li>`;
+        }
+
+        return { dignity, RETRO_TEXT, SIGN_EXTRA, chartRuler, moonPhase, balance, natalAspects, aspectLine, NAME, FUNC };
+    })();
+</script>
+
+
+<!-- ============================================================
      模組 4：介面與流程
      ============================================================ -->
 <script data-module="ui">
@@ -1058,22 +1263,29 @@
         const country = countrySelect.value;
         const info = COUNTRIES[country];
         const item = info.list[citySelect.selectedIndex];
-        let lat = item[1], lon = item[2], tz = info.tz === null ? item[3] : info.tz;
+        let lat = item[1], lon = item[2];
+        const zone = (typeof item[3] === 'string') ? item[3] : (info.zone || null);
+        let tzMin = null, dst = false, utcMs;
+        const assumeStd = $('stdCheck').checked;
 
         if (lat === null) {
             lat = parseFloat($('manLat').value);
             lon = parseFloat($('manLon').value);
-            tz = parseFloat($('manTz').value);
+            const tz = parseFloat($('manTz').value);
             if (isNaN(lat) || isNaN(lon) || isNaN(tz)) return { error: '請輸入出生地的緯度、經度與時區。' };
             if (lat < -66 || lat > 66) return { error: '緯度需介於 -66 到 66 之間（極圈附近上升點無法穩定計算）。' };
             if (lon < -180 || lon > 180) return { error: '經度需介於 -180 到 180 之間。' };
+            dst = $('dstCheck').checked && !assumeStd;
+            tzMin = Math.round((tz + (dst ? 1 : 0)) * 60);
+            utcMs = Date.UTC(y, m - 1, d, hh, mm) - tzMin * 60000;
+        } else if (zone && LocalTime.supported(zone)) {
+            const r = LocalTime.toUtc(y, m, d, hh, mm, zone, assumeStd);
+            utcMs = r.utcMs; tzMin = r.offsetMin; dst = r.dst;
+        } else {
+            tzMin = (info.tz || 0) * 60;
+            utcMs = Date.UTC(y, m - 1, d, hh, mm) - tzMin * 60000;
         }
-
-        let dst = $('dstCheck').checked;
-        if (country === '美國' && usDaylightSaving(y, m, d, hh)) dst = true;
-
-        const ms = Date.UTC(y, m - 1, d, hh, mm) - (tz + (dst ? 1 : 0)) * 3600000;
-        return { ms, lat, lon, y, m, d, hh, mm, country, city: item[0] };
+        return { ms: utcMs, lat, lon, y, m, d, hh, mm, country, city: item[0], tzMin, dst, assumeStd };
     }
 
     function generateAllAnalysis() {
@@ -1095,7 +1307,11 @@
         $('dispMoonDeg').innerText = fmtDeg(pos.Moon.lon);
         $('dispAscDeg').innerText = fmtDeg(ascLon);
         const timeStr = `${String(inp.hh).padStart(2, '0')}:${String(inp.mm).padStart(2, '0')}`;
-        $('dispBirthPlace').innerText = `📍 出生地點：${inp.country} ${inp.city} ｜ 出生時間：${inp.y}年${inp.m}月${inp.d}日 ${timeStr}`;
+        const tzSign = inp.tzMin < 0 ? '-' : '+';
+        const tzAbs = Math.abs(inp.tzMin);
+        const tzStr = `UTC${tzSign}${Math.floor(tzAbs / 60)}${tzAbs % 60 ? ':' + String(tzAbs % 60).padStart(2, '0') : ''}`;
+        const dstNote = inp.dst ? '，當時實施夏令時間，已扣除一小時' : (inp.assumeStd ? '，輸入時間視為標準時間' : '');
+        $('dispBirthPlace').innerText = `📍 出生地點：${inp.country} ${inp.city} ｜ 出生時間：${inp.y}年${inp.m}月${inp.d}日 ${timeStr}（${tzStr}${dstNote}）`;
 
         // 開運資訊（依太陽星座）
         const DIRS = { '火象': '正南方', '土象': '正北方', '風象': '正東方', '水象': '正西方' };
@@ -1114,10 +1330,17 @@
             const asp = Fortune.aspectBetween(lon, ascLon, 6);
             const aspText = asp ? `與上升點形成${asp.name}` : '與上升點無緊密相位';
             const retro = pos[p.key].retro ? ' ℞' : '';
+            const sIdx = SIGNS.indexOf(sg);
+            const dg = Interpret.dignity(p.key, sIdx);
+            const ex = Interpret.SIGN_EXTRA[sIdx];
+            const dgHtml = dg ? `<p style="margin-top:6px;"><b style="color:var(--accent-gold);">【${dg.label}】</b>${dg.text}</p>` : '';
+            const retroHtml = pos[p.key].retro ? `<p style="margin-top:6px;"><b style="color:var(--accent-cyan);">℞ </b>${Interpret.RETRO_TEXT}</p>` : '';
             return `
             <div class="planet-card">
                 <h4><span>${p.label}</span><span style="color:var(--accent-gold);">${sg.sym} ${sg.name} ${fmtDeg(lon)}${retro}</span></h4>
                 <p>${p.desc}在${sg.name}，傾向以「${sg.style}」的方式運作。</p>
+                <p style="margin-top:6px;">✅ 優勢：${ex.gift}　⚠️ 留意：${ex.shadow}</p>
+                ${dgHtml}${retroHtml}
                 <div class="planet-relation">💡 <b>落第 ${house + 1} 宮（${HOUSE_MEANING[house]}）</b>；${aspText}。</div>
             </div>`;
         }).join('') + `
@@ -1126,6 +1349,20 @@
                 <p>第 1 宮的起點，主宰第一印象、外貌氣質與面對世界的方式，在${asc.name}展現為「${asc.style}」。</p>
                 <div class="planet-relation">💡 上升點是所有行星能量向外表達的入口，其他行星的宮位皆以它為基準。</div>
             </div>`;
+
+        // 本命綜合解讀
+        const lons = {};
+        PLANET_INFO.forEach(p => { lons[p.key] = pos[p.key].lon; });
+        $('natalRuler').innerHTML = Interpret.chartRuler(ascIdx, lons, ascLon, SIGNS, HOUSE_MEANING);
+        const ph = Interpret.moonPhase(pos.Sun.lon, pos.Moon.lon);
+        $('natalPhaseTitle').innerText = `🌗 出生月相：${ph.name}（太陽與月亮相距 ${Math.round(ph.angle)}°）`;
+        $('natalPhase').innerHTML = `<p>${ph.text}</p>`;
+        const bal = Interpret.balance(lons, ascLon);
+        const bar = (label, v) => `<div class="score-row"><div class="score-header"><span>${label}</span><b>${v}</b></div><div class="score-bar-bg"><div class="score-bar-fill" style="width:${Math.round(v / bal.total * 100)}%;"></div></div></div>`;
+        $('natalBars').innerHTML = Object.entries(bal.e).map(([k, v]) => bar(k, v)).join('') + Object.entries(bal.m).map(([k, v]) => bar(k + '星座', v)).join('');
+        $('natalBalance').innerHTML = bal.notes.map(t => `<p>${t}</p>`).join('') + `<div class="hint">計分方式：太陽、月亮、上升點各 2 分，其餘八顆行星各 1 分，共 ${bal.total} 分。</div>`;
+        const nasp = Interpret.natalAspects(lons, ascLon).slice(0, 12);
+        $('natalAspects').innerHTML = nasp.length ? nasp.map(Interpret.aspectLine).join('') : '<li>沒有明顯的緊密相位。</li>';
 
         // Tab 2：模式、元素、陰陽
         $('ascModeTitle').innerText = `⚖️ 上升 ${asc.name} 的模式特質：【${asc.qual}星座】`;
