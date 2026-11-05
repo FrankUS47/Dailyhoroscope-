@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>專屬星盤深度解析與多維運勢</title>
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="color-scheme" content="dark">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="星盤運勢">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/icon-180.png">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>✨ 專屬星盤深度解析與多維運勢</h1>
+    <p class="subtitle">輸入出生年月日、時間與地點，依天文曆算出本命十大行星與上升星座，並結合當前行星位置產生運勢</p>
+
+    <div class="pwa-banner" id="pwaBanner">
+        📱 想在 iPhone 離線使用：用 Safari 開啟本頁，點下方「分享」圖示 → 選「加入主畫面」。之後從主畫面開啟，沒有網路也能使用。
+        <br><button id="pwaDismiss" type="button">我知道了</button>
+    </div>
+
+    <!-- 輸入表單 -->
+    <div class="form-group">
+        <label>出生日期（公曆/國曆）</label>
+        <div class="select-group">
+            <select id="yearSelect"></select>
+            <select id="monthSelect"></select>
+            <select id="daySelect"></select>
+        </div>
+    </div>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="hourSelect">出生時辰</label>
+            <select id="hourSelect">
+                <option value="0">子時 (23:00 - 00:59)</option>
+                <option value="2">丑時 (01:00 - 02:59)</option>
+                <option value="4">寅時 (03:00 - 04:59)</option>
+                <option value="6">卯時 (05:00 - 06:59)</option>
+                <option value="8">辰時 (07:00 - 08:59)</option>
+                <option value="10">巳時 (09:00 - 10:59)</option>
+                <option value="12">午時 (11:00 - 12:59)</option>
+                <option value="14">未時 (13:00 - 14:59)</option>
+                <option value="16">申時 (15:00 - 16:59)</option>
+                <option value="18">酉時 (17:00 - 18:59)</option>
+                <option value="20">戌時 (19:00 - 20:59)</option>
+                <option value="22">亥時 (21:00 - 22:59)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="exactTime">精確出生時間（選填）</label>
+            <input type="time" id="exactTime">
+            <div class="hint">有填寫時以此為準；上升星座約每 4 分鐘移動 1°，越精確越準。</div>
+        </div>
+
+        <div class="form-group">
+            <label for="countrySelect">出生國家</label>
+            <select id="countrySelect"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="citySelect">出生縣市/地區</label>
+            <select id="citySelect"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="targetYearSelect">查詢西元年流年</label>
+            <select id="targetYearSelect"></select>
+        </div>
+    </div>
+
+    <!-- 其他地區：手動輸入經緯度 -->
+    <div class="manual-panel" id="manualPanel">
+        <div class="row">
+            <div>
+                <label for="manLat">緯度（北緯為正）</label>
+                <input type="number" id="manLat" step="0.01" min="-66" max="66" placeholder="例如 25.03">
+            </div>
+            <div>
+                <label for="manLon">經度（東經為正）</label>
+                <input type="number" id="manLon" step="0.01" min="-180" max="180" placeholder="例如 121.56">
+            </div>
+            <div>
+                <label for="manTz">時區（UTC 偏移小時）</label>
+                <input type="number" id="manTz" step="0.5" min="-12" max="14" placeholder="例如 8">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+                <label style="font-weight:normal; color:var(--text-sub); margin:0; display:flex; gap:6px; align-items:center;"><input type="checkbox" id="dstCheck" style="width:auto;">當時實施夏令時間</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="check-row">
+        <input type="checkbox" id="stdCheck">
+        <label for="stdCheck" style="margin:0; font-weight:normal; color:var(--text-sub);">我輸入的出生時間已是標準時間（已自行扣除夏令時間，程式不再自動扣除）</label>
+    </div>
+    <div class="hint" style="margin:-6px 0 12px 0;">臺灣、中國大陸、香港、日本、新加坡與美國會依歷史時區資料自動判斷當時是否實施夏令時間（例如臺灣 1974、1975 年夏季）；病歷或戶籍上的出生時刻若已扣過夏令，請勾選上方選項。</div>
+
+    <button class="btn-submit" onclick="generateAllAnalysis()">開始生成專屬深度星盤與運勢</button>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- 結果展現區域 -->
+    <div id="resultContainer" class="result-container">
+
+        <div class="header-card">
+            <div class="astro-header-info">
+                <div class="main-sign-box">
+                    <div class="title">☀️ 太陽星座（核心自我）</div>
+                    <div class="name" id="dispSunSign">-</div>
+                    <div class="deg" id="dispSunDeg"></div>
+                </div>
+                <div class="main-sign-box">
+                    <div class="title">🌙 月亮星座（內在情感）</div>
+                    <div class="name" id="dispMoonSign">-</div>
+                    <div class="deg" id="dispMoonDeg"></div>
+                </div>
+                <div class="main-sign-box">
+                    <div class="title">🌅 上升星座（命門與面具）</div>
+                    <div class="name" id="dispAscSign">-</div>
+                    <div class="deg" id="dispAscDeg"></div>
+                </div>
+            </div>
+
+            <div style="font-size:0.85rem; color:#a5b4fc; margin-bottom:12px;" id="dispBirthPlace"></div>
+
+            <div class="lucky-grid">
+                <div class="lucky-item"><div class="title">幸運數字</div><div class="value" id="luckNum">-</div></div>
+                <div class="lucky-item"><div class="title">幸運顏色</div><div class="value" id="luckColor">-</div></div>
+                <div class="lucky-item"><div class="title">開運方位</div><div class="value" id="luckDir">-</div></div>
+                <div class="lucky-item"><div class="title">今日吉時</div><div class="value" id="luckHour">-</div></div>
+                <div class="lucky-item"><div class="title">幸運星座</div><div class="value" id="luckSign">-</div></div>
+            </div>
+        </div>
+
+        <div class="tab-menu">
+            <button class="tab-btn active" onclick="switchTab('planets', this)">十大行星與上升解析</button>
+            <button class="tab-btn" onclick="switchTab('ascendant', this)">上升星座模式與元素</button>
+            <button class="tab-btn" onclick="switchTab('natal', this)">本命綜合解讀</button>
+            <button class="tab-btn" onclick="switchTab('today', this)">今日運勢</button>
+            <button class="tab-btn" onclick="switchTab('tomorrow', this)">明日運勢</button>
+            <button class="tab-btn" onclick="switchTab('week', this)">本周運勢</button>
+            <button class="tab-btn" onclick="switchTab('month', this)">本月運勢</button>
+            <button class="tab-btn" onclick="switchTab('year', this)"><span id="tabYearLabel">2026</span>流年運勢</button>
+        </div>
+
+        <div id="tab-planets" class="tab-content active">
+            <h3 style="color:#c084fc; margin-top:0;">🪐 十大行星與上升星座能量地圖</h3>
+            <p style="font-size:0.9rem; color:var(--text-sub);">星盤中的行星代表不同的心理機能，宮位採整宮制（以上升星座所在星座為第 1 宮）。℞ 表示出生時該行星逆行。</p>
+            <div class="planet-card-grid" id="planetCards"></div>
+        </div>
+
+        <div id="tab-ascendant" class="tab-content">
+            <h3 style="color:#fbbf24; margin-top:0;">🌅 上升星座三模式與四元素深度解析</h3>
+            <div class="traits-box">
+                <h4 id="ascModeTitle">⚖️ 上升星座的三種模式</h4>
+                <p class="analysis-box" id="ascModeDesc"></p>
+            </div>
+            <div class="traits-box">
+                <h4 id="ascElemTitle">🔥 上升星座的四元素特質</h4>
+                <p class="analysis-box" id="ascElemDesc"></p>
+            </div>
+            <div class="traits-box">
+                <h4 id="ascPolTitle">☯️ 上升星座的陰陽性</h4>
+                <p class="analysis-box" id="ascPolDesc"></p>
+            </div>
+        </div>
+
+        <div id="tab-natal" class="tab-content">
+            <h3 style="color:#fbbf24; margin-top:0;">🧭 本命盤綜合解讀</h3>
+            <div class="traits-box"><h4>🔑 命主星（整張盤的總開關）</h4><div class="analysis-box" id="natalRuler"></div></div>
+            <div class="traits-box"><h4 id="natalPhaseTitle">🌗 月相</h4><div class="analysis-box" id="natalPhase"></div></div>
+            <div class="traits-box"><h4>⚖️ 元素與模式分布</h4>
+                <div class="scores-grid" id="natalBars"></div>
+                <div class="analysis-box" id="natalBalance"></div>
+            </div>
+            <div class="traits-box"><h4>🔗 本命相位（由最緊密者排序）</h4>
+                <ul class="event-list" id="natalAspects"></ul>
+                <div class="hint">天王星、海王星、冥王星彼此之間的相位為同世代共有，不列入。相位容許度依行星而異（日月 8°、一般行星 6°、外行星 4°）。</div>
+            </div>
+        </div>
+
+        <div id="tab-today" class="tab-content">
+            <div class="scores-grid" id="todayScores"></div>
+            <div class="analysis-box" id="todayText"></div>
+        </div>
+
+        <div id="tab-tomorrow" class="tab-content">
+            <div class="scores-grid" id="tomorrowScores"></div>
+            <div class="analysis-box" id="tomorrowText"></div>
+        </div>
+
+        <div id="tab-week" class="tab-content">
+            <div class="scores-grid" id="weekScores"></div>
+            <div class="analysis-box" id="weekText"></div>
+        </div>
+
+        <div id="tab-month" class="tab-content">
+            <div class="month-tags-grid">
+                <div><span style="color:var(--text-sub);">貴人方位：</span><span style="font-weight:bold;" id="mDir">-</span></div>
+                <div><span style="color:var(--text-sub);">休閒解壓：</span><span style="font-weight:bold;" id="mLeisure">-</span></div>
+                <div><span style="color:var(--text-sub);">貼心星座：</span><span style="font-weight:bold;" id="mFriend">-</span></div>
+                <div><span style="color:var(--text-sub);">財神星座：</span><span style="font-weight:bold;" id="mWealth">-</span></div>
+                <div><span style="color:var(--text-sub);">煩人星座：</span><span style="font-weight:bold;" id="mAnnoy">-</span></div>
+            </div>
+            <div class="strength-box" id="mStrength"></div>
+            <div class="weakness-box" id="mWeak"></div>
+            <div class="scores-grid" id="monthScores"></div>
+            <div class="analysis-box" id="monthText"></div>
+        </div>
+
+        <div id="tab-year" class="tab-content">
+            <h3 style="color:#fbbf24; margin-top:0;" id="yearTitle">流年運勢</h3>
+            <div class="scores-grid" id="yearScores"></div>
+            <div class="analysis-box" id="yearText"></div>
+        </div>
+
+        <div class="footnote">
+            行星位置依天文曆計算（太陽、月亮、水星至冥王星；上升點依出生時間與出生地經緯度計算）。出生時間以所選地區的標準時區換算，若出生當時實施夏令時間，請勾選上方選項。幸運數字、顏色、方位與吉時屬傳統／娛樂性質的參考內容。
+        </div>
+    </div>
+    <div class="pwa-status" id="pwaStatus"></div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/astro.js"></script>
+<script src="js/fortune.js"></script>
+<script src="js/interpret.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
